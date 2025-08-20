@@ -15,6 +15,8 @@ import java.util.function.Supplier;
 public class C2SWhitelistEditPacket {
     private final ResourceLocation itemId;
     private final boolean add; // true = 添加，false = 删除
+    private static final java.util.Map<java.util.UUID, Long> cooldowns = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long COOLDOWN_MS = 500;
 
     public C2SWhitelistEditPacket(ResourceLocation itemId, boolean add) {
         this.itemId = itemId;
@@ -38,24 +40,44 @@ public class C2SWhitelistEditPacket {
             if (player == null) return;
 
             boolean isOp = player.hasPermissions(2);
-            // LuckPerms 权限判断（需集成 LuckPerms API）
-            boolean hasAdminPerm = LuckPermsApi.checkPlayerPermission(player, "buildmode.admin");
+            LuckPermsApi.checkPlayerPermissionAsync(player, "buildmode.admin").thenAccept(hasAdminPerm -> {
+                if (!isOp && !hasAdminPerm) {
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable("buildmode.no_permission"), false
+                    );
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                long last = cooldowns.getOrDefault(player.getUUID(), 0L);
+                if (now - last < COOLDOWN_MS) {
+                    // 可选：提示冷却中
+                    return;
+                }
+                cooldowns.put(player.getUUID(), now);
 
-            if (!isOp && !hasAdminPerm) {
-                return;
-            }
+                Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                if (item == null) {
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable("buildmode.item_not_found"), false
+                    );
+                    return;
+                }
 
-            Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
-            if (item == null) return;
+                if (add) {
+                    WhitelistManager.add(item);
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable("buildmode.whitelist_add_success"), false
+                    );
+                } else {
+                    WhitelistManager.remove(item);
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable("buildmode.whitelist_remove_success"), false
+                    );
+                }
 
-            if (add) {
-                WhitelistManager.add(item);
-            } else {
-                WhitelistManager.remove(item);
-            }
-
-            WhitelistManager.save();
-            S2CSyncWhitelistPacket.syncToAll();
+                WhitelistManager.save();
+                S2CSyncWhitelistPacket.syncToAll();
+            });
         });
         ctx.get().setPacketHandled(true);
     }

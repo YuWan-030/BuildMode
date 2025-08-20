@@ -15,10 +15,8 @@ public class ModPotions {
     public static final DeferredRegister<Potion> POTIONS =
             DeferredRegister.create(ForgeRegistries.POTIONS, BuildMode.MODID);
 
-    public static final RegistryObject<Potion> BUILDFLY =
-            POTIONS.register("buildfly", () ->
-                    new Potion(new MobEffectInstance(ModEffects.BUILDFLY.get(), 20 * 60 * 3))
-            );
+    public static final RegistryObject<Potion> BUILDFLY = POTIONS.register("buildfly",
+            () -> new Potion(new MobEffectInstance(ModEffects.BUILDFLY.get(), 20 * 600, 0)));
 
     public static void register() {
         POTIONS.register(FMLJavaModLoadingContext.get().getModEventBus());

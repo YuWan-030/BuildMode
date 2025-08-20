@@ -13,6 +13,8 @@ import java.util.function.Supplier;
 
 public class C2SRequestItemPacket {
     private final ResourceLocation itemId;
+    private static final java.util.Map<java.util.UUID, Long> cooldowns = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long COOLDOWN_MS = 500;
 
     public C2SRequestItemPacket(ResourceLocation itemId) {
         this.itemId = itemId;
@@ -31,8 +33,24 @@ public class C2SRequestItemPacket {
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
 
+            long now = System.currentTimeMillis();
+            long last = cooldowns.getOrDefault(player.getUUID(), 0L);
+            if (now - last < COOLDOWN_MS) {
+                // 如果在冷却时间内，提示
+                player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable("buildmode.request_cooldown"),
+                        false
+                );
+                return;
+            }
+            cooldowns.put(player.getUUID(), now);
+
             Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
             if (item == null) return;
+
+            if (!me.alini.buildmode.region.RegionManager.isInBuildRegion(player)) {
+                return;
+            }
 
             // 检查物品是否在白名单
             if (!me.alini.buildmode.whitelist.WhitelistManager.isWhitelisted(item)) {

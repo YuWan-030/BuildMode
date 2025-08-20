@@ -2,6 +2,8 @@ package me.alini.buildmode;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
 
 public class Config {
     public static final ForgeConfigSpec COMMON_SPEC;
@@ -27,5 +29,8 @@ public class Config {
                     .defineInRange("maxRegionCount", 32, 1, 256);
             builder.pop();
         }
+    }
+    public static void register() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, COMMON_SPEC, "buildmode-common.toml");
     }
 }

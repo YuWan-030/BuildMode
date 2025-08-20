@@ -2,15 +2,20 @@
 package me.alini.buildmode.client;
 
 import net.minecraft.resources.ResourceLocation;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class ClientWhitelist {
-    private static Set<ResourceLocation> whitelist = new HashSet<>();
+    // 使用线程安全的集合
+    private static final Set<ResourceLocation> whitelist = new CopyOnWriteArraySet<>();
 
-    public static void setWhitelist(Set<ResourceLocation> list) {
-        whitelist = new HashSet<>(list);
+    public static void updateWhitelist(Collection<ResourceLocation> newList) {
+        whitelist.clear();
+        whitelist.addAll(newList);
     }
 
     public static boolean isWhitelisted(ResourceLocation id) {
@@ -18,6 +23,6 @@ public class ClientWhitelist {
     }
 
     public static Set<ResourceLocation> getWhitelist() {
-        return Collections.unmodifiableSet(whitelist);
+        return whitelist;
     }
 }
