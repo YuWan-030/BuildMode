@@ -8,13 +8,12 @@
   "buildmode.whitelist_add_success": "已添加到白名单",
   "buildmode.whitelist_remove_success": "已从白名单移除",
   "buildmode.request_cooldown": "请求过快，请稍后再试",
-  "effect.buildmode.buildfly": "建造飞行",
   "effect.buildmode.buildfly.description": "在建造模式中启用飞行",
-  "item.buildmode.buildfly_potion.effect.empty": "建造飞行药水",
-  "item.buildmode.buildfly_potion.effect.splash": "建造飞行药水（喷溅）",
-  "item.buildmode.buildfly_potion.effect.lingering": "建造飞行药水（滞留）",
   "item.minecraft.potion.effect.buildfly": "建造飞行药水",
   "item.minecraft.splash_potion.effect.buildfly": "建造飞行药水（喷溅）",
   "item.minecraft.lingering_potion.effect.buildfly": "建造飞行药水（滞留）",
-  "item.buildmode.buildfly_potion": "建造飞行药水"
+  "item.buildmode.buildfly_potion": "建造飞行药水",
+  "item.buildmode.buildfly": "建造飞行",
+  "effect.buildmode.buildfly": "建造飞行",
+  "buildmode.screen.title": "建造模式物品栏"
 }

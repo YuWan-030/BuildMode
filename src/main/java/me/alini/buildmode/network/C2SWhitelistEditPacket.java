@@ -16,7 +16,6 @@ public class C2SWhitelistEditPacket {
     private final ResourceLocation itemId;
     private final boolean add; // true = 添加，false = 删除
     private static final java.util.Map<java.util.UUID, Long> cooldowns = new java.util.concurrent.ConcurrentHashMap<>();
-    private static final long COOLDOWN_MS = 500;
 
     public C2SWhitelistEditPacket(ResourceLocation itemId, boolean add) {
         this.itemId = itemId;
@@ -47,13 +46,6 @@ public class C2SWhitelistEditPacket {
                     );
                     return;
                 }
-                long now = System.currentTimeMillis();
-                long last = cooldowns.getOrDefault(player.getUUID(), 0L);
-                if (now - last < COOLDOWN_MS) {
-                    // 可选：提示冷却中
-                    return;
-                }
-                cooldowns.put(player.getUUID(), now);
 
                 Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
                 if (item == null) {

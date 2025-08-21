@@ -9,6 +9,7 @@ import me.alini.buildmode.effect.ModPotions;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -20,6 +21,10 @@ public class BuildMode {
     public static final String MODID = "buildmode";
 
     public BuildMode() {
+        if (!ModList.get().isLoaded("crashcore")) {
+            throw new RuntimeException("必须安装 crashcore 模组才能启动 BuildMode！");
+        }
+
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModEffects.register();
         ModItems.register();
