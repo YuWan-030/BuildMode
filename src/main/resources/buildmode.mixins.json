@@ -4,8 +4,7 @@
   "package": "me.alini.buildmode.mixin",
   "compatibilityLevel": "JAVA_8",
   "refmap": "BuildMode.refmap.json",
-  "mixins": [
-  ],
+  "mixins": [],
   "client": [
   ],
   "injectors": {

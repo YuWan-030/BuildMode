@@ -63,6 +63,14 @@ public class BuildModeScreen extends Screen {
 
     private enum Status {WHITELISTED, TO_ADD, TO_REMOVE}
 
+    private static final CreativeModeTab WHITELIST_TAB = CreativeModeTab.builder()
+            .icon(() -> new ItemStack(net.minecraft.world.item.Items.BOOK)) // 占位图标
+            .title(Component.literal("白名单物品"))
+            .displayItems((params, output) -> {}) // 空实现
+            .build();
+
+
+
     public BuildModeScreen() {
         super(Component.translatable("buildmode.screen.title"));
     }
@@ -70,6 +78,7 @@ public class BuildModeScreen extends Screen {
     private List<CreativeModeTab> getNonEmptyTabs() {
         if (tabList == null) return Collections.emptyList();
         List<CreativeModeTab> result = new ArrayList<>();
+        result.add(WHITELIST_TAB); // 第一个为白名单
         for (CreativeModeTab tab : tabList) {
             if (!tab.getDisplayItems().isEmpty()) {
                 result.add(tab);
@@ -94,13 +103,7 @@ public class BuildModeScreen extends Screen {
             allItems = new ArrayList<>();
             loading = true;
             CompletableFuture.runAsync(() -> {
-                Set<Item> items = new HashSet<>();
-                for (CreativeModeTab tab : nonEmptyTabs) {
-                    for (ItemStack stack : tab.getDisplayItems()) {
-                        items.add(stack.getItem());
-                    }
-                }
-                List<Item> itemList = new ArrayList<>(items);
+                List<Item> itemList = new ArrayList<>(ForgeRegistries.ITEMS.getValues());
                 itemList.sort(Comparator.comparing(i -> ForgeRegistries.ITEMS.getKey(i).toString()));
                 Minecraft.getInstance().execute(() -> {
                     allItems.clear();
@@ -186,6 +189,7 @@ public class BuildModeScreen extends Screen {
         updateFilteredItems();
     }
 
+    // TabButton 内渲染方法
     private class TabButton extends Button {
         private final CreativeModeTab tab;
         private final int tabIndex;
@@ -219,8 +223,14 @@ public class BuildModeScreen extends Screen {
             int color = blendColor(baseColor, hoverColor, alpha);
             guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), color);
 
-            ItemStack icon = tab.getDisplayItems().stream().findAny().orElse(ItemStack.EMPTY);
-            if (!icon.isEmpty()) guiGraphics.renderItem(icon, this.getX() + 4, this.getY() + 6);
+            // 判断是否为白名单标签
+            if (tab == WHITELIST_TAB) {
+                ResourceLocation icon = new ResourceLocation("buildmode", "textures/gui/buildmode_button.png");
+                guiGraphics.blit(icon, this.getX() + 4, this.getY() + 6, 0, 0, 16, 16, 16, 16);
+            } else {
+                ItemStack icon = tab.getDisplayItems().stream().findAny().orElse(ItemStack.EMPTY);
+                if (!icon.isEmpty()) guiGraphics.renderItem(icon, this.getX() + 4, this.getY() + 6);
+            }
         }
     }
 
@@ -253,9 +263,15 @@ public class BuildModeScreen extends Screen {
         if (currentTab == null && !nonEmptyTabs.isEmpty()) currentTab = nonEmptyTabs.get(0);
 
         String query = searchBox != null ? searchBox.getValue().toLowerCase(Locale.ROOT) : "";
-        List<Item> tabItems = currentTab != null
-                ? currentTab.getDisplayItems().stream().map(ItemStack::getItem).distinct().toList()
-                : allItems;
+        List<Item> tabItems;
+        if (currentTab == WHITELIST_TAB) {
+            // 只显示白名单物品
+            tabItems = allItems.stream()
+                    .filter(item -> ClientWhitelist.getWhitelist().contains(ForgeRegistries.ITEMS.getKey(item)))
+                    .toList();
+        } else {
+            tabItems = currentTab.getDisplayItems().stream().map(ItemStack::getItem).distinct().toList();
+        }
         if (filteredItems != null && query.equals(lastQuery) && currentTab == lastTab) return;
         lastQuery = query;
         lastTab = currentTab;
@@ -422,14 +438,24 @@ public class BuildModeScreen extends Screen {
     private void toggleSlot(ResourceLocation id) {
         Status current = tempEdits.get(id);
         boolean inWhitelist = ClientWhitelist.getWhitelist().contains(id);
-        if (current == null) {
-            tempEdits.put(id, inWhitelist ? Status.TO_REMOVE : Status.TO_ADD);
-        } else if (current == Status.TO_ADD) {
-            tempEdits.remove(id); // 取消待添加，回到未白名单
-        } else if (current == Status.TO_REMOVE) {
-            tempEdits.remove(id); // 取消待移除，回到白名单
+
+        if (inWhitelist) {
+            // 白名单物品：WHITELISTED → TO_REMOVE → WHITELISTED
+            if (current == Status.WHITELISTED || current == null) {
+                tempEdits.put(id, Status.TO_REMOVE);
+            } else if (current == Status.TO_REMOVE) {
+                tempEdits.put(id, Status.WHITELISTED);
+            }
+        } else {
+            // 非白名单物品：null → TO_ADD → null
+            if (current == null) {
+                tempEdits.put(id, Status.TO_ADD);
+            } else if (current == Status.TO_ADD) {
+                tempEdits.remove(id);
+            }
         }
 
+        updateFilteredItems();
     }
     @Override
     public void onClose() {

@@ -17,11 +17,13 @@ public class WhitelistItemUseHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         ItemStack stack = event.getItemStack();
         ResourceLocation id = stack.getItem().builtInRegistryHolder().key().location();
+        // OP 或有权限直接放行
+        if (player.hasPermissions(4)) return;
         // 使用服务端白名单
         if (!WhitelistManager.isWhitelisted(stack.getItem())) return;
-
         if (!RegionManager.isPlayerInAnyRegion(player)) {
             event.setCanceled(true);
+            player.setItemInHand(event.getHand(), ItemStack.EMPTY);
             player.displayClientMessage(
                     net.minecraft.network.chat.Component.literal("该物品只能在建造区域内使用")
                             .withStyle(style -> style.withColor(0xFF3333)), // 红色
@@ -34,11 +36,13 @@ public class WhitelistItemUseHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         ItemStack stack = event.getItemStack();
         ResourceLocation id = stack.getItem().builtInRegistryHolder().key().location();
+        // OP 或有权限直接放行
+        if (player.hasPermissions(4)) return;
         // 使用服务端白名单
         if (!WhitelistManager.isWhitelisted(stack.getItem())) return;
-
         if (!RegionManager.isPlayerInAnyRegion(player)) {
             event.setCanceled(true);
+            player.setItemInHand(event.getHand(), ItemStack.EMPTY);
             player.displayClientMessage(
                     net.minecraft.network.chat.Component.literal("该物品只能在建造区域内使用")
                             .withStyle(style -> style.withColor(0xFF3333)), // 红色
@@ -46,4 +50,5 @@ public class WhitelistItemUseHandler {
             );
         }
     }
+
 }
