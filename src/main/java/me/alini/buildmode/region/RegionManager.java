@@ -220,6 +220,10 @@ public class RegionManager {
             if (player.hasEffect(ModEffects.BUILDFLY.get())) {
                 player.removeEffect(ModEffects.BUILDFLY.get());
                 player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 220, 0, true, false, false));
+                player.sendSystemMessage(
+                        Component.literal("建造飞行已失效，为您添加了缓降效果防止摔落！")
+                                .withStyle(style -> style.withColor(0xFF3333))
+                );
             }
         }
     }
