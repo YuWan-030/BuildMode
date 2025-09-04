@@ -1,4 +1,4 @@
-# BuildMode 插件
+# BuildMode 模组
 
 [English](./README.md) | [简体中文](./README_zh-CN.md)
 
